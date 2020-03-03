@@ -14,6 +14,6 @@ yarn serve
 ```
 yarn build
 ```
-
+##### 基于fabricJs的画板工具，脚手架是vuecli3
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
