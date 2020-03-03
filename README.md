@@ -1,2 +1,19 @@
-# drawing-board
-基于fabric.js的画板小工具，实现基础功能
+# fabric-demo-vue
+
+## Project setup
+```
+yarn install
+```
+
+### Compiles and hot-reloads for development
+```
+yarn serve
+```
+
+### Compiles and minifies for production
+```
+yarn build
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
