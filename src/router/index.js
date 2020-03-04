@@ -3,7 +3,7 @@ import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
 
-const routes = [
+let routes = [
   {
     path: '/home',
     name: 'home',
@@ -16,8 +16,8 @@ const routes = [
   }
 ]
 
-const router = new VueRouter({
-  mode: 'history',
+let router = new VueRouter({
+  mode: 'hash',
   base: process.env.BASE_URL,
   routes
 })

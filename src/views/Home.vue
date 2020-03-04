@@ -356,7 +356,7 @@
         })
       },
       loadLocalImageByBase64 (event) {   // base64
-        const _this = this
+        let _this = this
         var imgFile = new FileReader()
         imgFile.readAsDataURL(event.target.files[0])
         imgFile.onload = function () {
