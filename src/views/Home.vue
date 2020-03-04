@@ -47,8 +47,8 @@
 </template>
 
 <script>
-  import { fabric } from 'fabricjs'
-
+  // import { fabric } from 'fabricjs'
+  // var canvas = new fabric.Canvas('context')
   export default {
     name: 'Home',
     data () {
