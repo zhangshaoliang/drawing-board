@@ -3,7 +3,7 @@ const terserPlugin = require('terser-webpack-plugin')
 const env = process.env.NODE_ENV;
 module.exports = {
   publicPath: '/',
-  outputDir: '../dist', // 输出文件目录
+  outputDir: './dist', // 输出文件目录
   devServer: {
     open: true,
     port: 6789,
