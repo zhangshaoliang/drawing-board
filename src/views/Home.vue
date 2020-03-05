@@ -1,6 +1,5 @@
 <template>
   <div class="container">
-    <h2 class="title">简易做图工具</h2>
     <div class="header">
       <div class="item">
         <span class="demonstration">画笔粗细</span>
@@ -23,23 +22,23 @@
       <div class="menu">
         <span v-for="(item,index) in toolsArr" :key="index" @click="chooseTools(item.name,index)" ref="item">{{item.label}}</span>
       </div>
-      <div class="canvasBox">
-        <canvas id="context" width="1500" height="700"></canvas>
+      <div class="canvasBox" ref="canvasBox">
+        <canvas id="context" width="100%" height="100%"></canvas>
       </div>
     </div>
 
     <div class="buttonGroup">
-      <button @click="loadWebImage()" class="marginLeft20">加载线上平台图片</button>
+      <button @click="loadWebImage()" class="marginLeft20">添加网络图片</button>
       <button @click="$refs.file2.click()" class="marginLeft20">加载本地图片url格式</button>
       <button @click="$refs.file1.click()" class="marginLeft20">加载本地图片base64格式</button>
-      <button @click="toJSON" class="marginLeft20">toJSON</button>
-      <button @click="loadFromJSON" class="marginLeft20">loadFromJSON</button>
+      <button @click="toJSON" class="marginLeft20" v-if="!isMobile">toJSON</button>
+      <button @click="loadFromJSON" class="marginLeft20" v-if="!isMobile">loadFromJSON</button>
       <button @click="save" class="marginLeft20">下载保存</button>
       <input type="file" @change="loadLocalImageByBase64" ref="file1" style="display: none;"/>
       <input type="file" @change="loadLocalImageByUrl" ref="file2" style="display: none;"/>
     </div>
-    <div class="showJson">
-      <textarea name="" id="" cols="30" rows="10" v-model="jsonValue"></textarea>
+    <div class="showJson" v-if="!isMobile">
+      <textarea v-model="jsonValue" style="height: 121px;resize: none;width: 100%;box-sizing: border-box;"></textarea>
     </div>
   </div>
 </template>
@@ -103,11 +102,11 @@
           },
           {
             name: 'eraser',
-            label: '橡皮擦'
+            label: '橡皮'
           },
           {
             name: 'clear',
-            label: '清空画布'
+            label: '清空'
           }
         ],
         chooseToolsName:"",
@@ -117,7 +116,8 @@
         doDrawing: false,
         offsetX: 0,
         offsetY: 0,
-        jsonValue: ""
+        jsonValue: "",
+        isMobile:false
       }
     },
     watch: {
@@ -138,12 +138,20 @@
       },
     },
     mounted () {
+      if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+        this.isMobile=true
+      }
       this.canvas = new fabric.Canvas('context', {
         isDrawingMode: true,   //设置是否可以绘制
         selectable: false,     //设置是否可以选中拖动  fabric提供的
         selection: false,   // 设置这两个属性没有任何反应
         backgroundColor: '#fff'
       })
+      this.$nextTick(()=>{
+        this.canvas.setWidth(this.$refs.canvasBox.offsetWidth)     //设置画布的宽度
+        this.canvas.setHeight(this.$refs.canvasBox.offsetHeight)   //设置画布的高度
+      })
+
       this.init()
     },
     methods: {
@@ -407,56 +415,6 @@
   }
 </script>
 <style lang="scss" scoped>
-  .container {
-    .title {
-      text-align: center;
-    }
-
-    .header {
-      display: flex;
-
-      .item {
-        display: flex;
-        align-items: center;
-        margin-right: 20px;
-
-        .demonstration {
-          margin-right: 15px;
-        }
-
-        .el-slider {
-          width: 200px;
-        }
-      }
-    }
-
-    .center {
-      display: flex;
-
-      .menu {
-        width: 200px;
-        display: flex;
-        flex-direction: column;
-
-        span {
-          margin: 0 10px;
-          display: inline-block;
-          padding: 10px 10px;
-          border: 1px solid black;
-          font-size: 20px;
-          &.active {
-            border-color: red;
-          }
-        }
-      }
-
-      .canvasBox {
-        width: 1500px;
-        background-color: #fff;
-      }
-    }
-  }
-
   .marginLeft20 {
     margin-left: 20px
   }
@@ -471,6 +429,121 @@
     > button {
       display: inline-block;
       padding: 10px 20px;
+    }
+  }
+  @media (min-width: 1000px) {
+    .container {
+      .header {
+        display: flex;
+
+        .item {
+          display: flex;
+          align-items: center;
+          margin-right: 20px;
+
+          .demonstration {
+            margin-right: 15px;
+          }
+
+          .el-slider {
+            width: 200px;
+          }
+        }
+      }
+
+      .center {
+        display: flex;
+
+        .menu {
+          width: 200px;
+          display: flex;
+          flex-direction: column;
+
+          span {
+            margin: 0 10px;
+            display: inline-block;
+            padding: 10px 10px;
+            border: 1px solid black;
+            font-size: 20px;
+            &.active {
+              border-color: red;
+            }
+          }
+        }
+
+        .canvasBox {
+          flex: 1;
+          margin-right: 10px;
+          height: 700px;
+          background-color: #fff;
+        }
+      }
+    }
+  }
+
+
+
+  @media (max-width: 1000px) {
+    .container {
+      font-size: 26px;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      left: 0;
+      top: 0;
+      flex-direction: column;
+      .header {
+        display: flex;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        .item {
+          display: flex;
+          align-items: center;
+          margin-right: 20px;
+          .demonstration {
+            margin-right: 15px;
+          }
+
+          .el-slider {
+            width: 200px;
+          }
+        }
+      }
+      .center {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        .menu {
+          margin: 0 10px;
+          display: flex;
+          flex-wrap: wrap;
+          margin-bottom: 10px;
+          span {
+            padding: 10px 25px;
+            border: 1px solid black;
+            &.active {
+              border-color: red;
+            }
+          }
+        }
+
+        .canvasBox {
+          width: 100%;
+          flex: 1;
+          box-sizing: border-box;
+        }
+      }
+      .buttonGroup {
+        margin-top: 20px;
+
+        > button {
+          font-size: 26px;
+          display: inline-block;
+          padding: 10px 20px;
+          margin-bottom: 10px;
+        }
+      }
     }
   }
 </style>
