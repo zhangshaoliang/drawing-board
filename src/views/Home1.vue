@@ -29,6 +29,8 @@
     </div>
 
     <div class="buttonGroup">
+      <button @click="addRectangle()" class="marginLeft20">添加图形</button>
+      <button @click="andText()" class="marginLeft20">添加文本</button>
       <button @click="loadWebImage()" class="marginLeft20">加载线上平台图片</button>
       <button @click="$refs.file2.click()" class="marginLeft20">加载本地图片url格式</button>
       <button @click="$refs.file1.click()" class="marginLeft20">加载本地图片base64格式</button>
@@ -53,7 +55,7 @@
         fontSize:40,
         thickness: 10,  // 画笔粗细
         color: '#000',  // 画笔颜色
-        bgColor: '#fff',  // 填充颜色
+        bgColor: '#000',  // 填充颜色
         mouseFrom: { x: 0, y: 0 },
         mouseTo: { x: 0, y: 0 },
         toolsArr: [
@@ -106,8 +108,8 @@
             label: '橡皮擦'
           },
           {
-            name: 'clear',
-            label: '清空画布'
+            name: 'delete',
+            label: '删除'
           }
         ],
         chooseToolsName:"",
@@ -154,7 +156,7 @@
         this.$refs.item[index].className = 'active';
         this.chooseToolsName=name;
 
-        if (name === 'clear') {   //清空单独处理
+        if (name === 'delete') {   //清空单独处理
           this.resetObj()                //重置的方法
           this.canvas.clear()         //清空画布
           this.canvas.renderAll()     //重新渲染
@@ -174,9 +176,9 @@
         this.canvas.skipTargetFind = true
       },
       drawing(){
-        // if (this.drawingObject) {
-        //   this.canvas.remove(this.drawingObject)
-        // }
+        if (this.drawingObject) {
+          this.canvas.remove(this.drawingObject)
+        }
         let canvasObject = null
         switch (this.chooseToolsName) {
           case "pencil":
@@ -187,92 +189,92 @@
             break;
           case "line":
             this.resetObj()
-            canvasObject = new fabric.Line([110, 110, 210, 210], {
+            canvasObject = new fabric.Line([this.mouseFrom.x, this.mouseFrom.y, this.mouseTo.x, this.mouseTo.y], {
+              //fabric.Line是fabric封装的方法 直接用就好了
               stroke: this.color,   //画笔颜色
               strokeWidth: this.thickness   //画笔宽度
             })
-            this.drag()
             break;
           case "arrow":
             this.resetObj()
-            canvasObject = new fabric.Path(this.drawArrow(100, 100, 200, 200, 17.5, 17.5), {
+            canvasObject = new fabric.Path(this.drawArrow(this.mouseFrom.x, this.mouseFrom.y, this.mouseTo.x, this.mouseTo.y, 17.5, 17.5), {
               stroke: this.color,
               fill: this.bgColor,
               strokeWidth: this.thickness
             })
-            this.drag()
             break;
           case "rectangle":
             this.resetObj()
             canvasObject = new fabric.Rect({
-              left: 100,
-              top: 100,
-              width: 100,
-              height: 100,
+              left: this.mouseFrom.x,
+              top: this.mouseFrom.y,
+              width: this.mouseTo.x - this.mouseFrom.x,
+              height: this.mouseTo.y - this.mouseFrom.y,
               stroke: this.color,
               strokeWidth: this.thickness,
               fill: this.bgColor
             })
-            this.drag()
             break;
           case "circle":
             this.resetObj()
+            let radius = Math.sqrt((this.mouseTo.x - this.mouseFrom.x) * (this.mouseTo.x - this.mouseFrom.x) + (this.mouseTo.y - this.mouseFrom.y) * (this.mouseTo.y - this.mouseFrom.y)) / 2;
+            //Math.sqrt 这个方法是返回平方根  计算圆的半径时用的是勾股定理
             canvasObject = new fabric.Circle({
-              left: 150,
-              top: 150,
-              radius: 80,   //圆的半径
+              left: this.mouseFrom.x,
+              top: this.mouseFrom.y,
+              radius: radius,   //圆的半径
               stroke: this.color,
               strokeWidth: this.thickness,
               fill: this.bgColor
             })
-            this.drag()
             break;
           case "ellipse":
             this.resetObj()
+            let left = this.mouseFrom.x
+            let top = this.mouseFrom.y
             canvasObject = new fabric.Ellipse({
-              left: 150,
-              top: 150,
+              left: left,
+              top: top,
               fill: this.bgColor,
               originX: 'center',    //从X轴中心点绘制
               originY: 'center',    //从Y轴中心点绘制
-              rx: 80,  //x轴半径
-              ry: 40,   //y轴半径   math.abs返回绝对值
+              rx: Math.abs(left - this.mouseTo.x),  //x轴半径
+              ry: Math.abs(top - this.mouseTo.y),   //y轴半径   math.abs返回绝对值
               stroke: this.color,
               strokeWidth: this.thickness
             })
-            this.drag()
             break;
           case "equilateral":
             this.resetObj()
+            let height = this.mouseTo.y - this.mouseFrom.y
             canvasObject = new fabric.Triangle({
-              top: 130,
-              left: 130,
-              width: 120,
-              height: Math.sqrt(3)*60,
+              top: this.mouseFrom.y,
+              left: this.mouseFrom.x,
+              width: Math.sqrt(Math.pow(height, 2) + Math.pow(height / 2.0, 2)),
+              height: height,
               stroke: this.color,
               strokeWidth: this.thickness,
               fill: this.bgColor
             })
-            this.drag()
             break;
           case "text":
             this.resetObj()
-            let textbox = new fabric.Textbox('添加文字', {
-              borderColor: '#ff0000', // 激活状态时的边框颜色
-              editingBorderColor: '#ff0000', // 文本对象的边框颜色，当它处于编辑模式时
-              left: 160,
-              top: 160,
+            let textbox = new fabric.Textbox('', {
+              left: this.mouseFrom.x,
+              top: this.mouseFrom.y,
               width: 150,
               fontSize: this.fontSize,
-              fill: this.color,
+              fill: this.bgColor,
               hasControls: false
             })
-            this.drag()
             this.canvas.add(textbox)
             textbox.enterEditing()
             break;
           case "drag":
-            this.drag()
+            this.canvas.isDrawingMode = false
+            this.canvas.skipTargetFind = false
+            this.canvas.selectable = true
+            this.canvas.selection = true
             break;
           case "undo":
             this.resetObj()
@@ -304,11 +306,38 @@
           this.drawingObject = canvasObject
         }
       },
-      drag(){
-        this.canvas.isDrawingMode = false
-        this.canvas.skipTargetFind = false
-        this.canvas.selectable = true
-        this.canvas.selection = true
+      addRectangle () {   // 添加图形
+        console.log(this.canvas)
+        var rect = new fabric.Rect({
+          left: 100,
+          top: 100,
+          fill: 'blue',
+          width: 150,
+          height: 150
+        })
+        this.canvas.add(rect)
+      },
+      andText () {   // 添加文本// Itext // 可编辑
+        var text = new fabric.IText('Hello World', {  // 绘制文本
+          borderColor: '#ff0000', // 激活状态时的边框颜色
+          editingBorderColor: '#ff0000', // 文本对象的边框颜色，当它处于编辑模式时
+          transparentCorners: true,
+          fill: '#ff0000',
+          fontSize: 30,
+          color: 'yellow',
+          originX: 'center',
+          originY: 'center',
+          left: 200,
+          top: 300,
+          fontFamily: 'Comic Sans'
+        })
+        text.on('selected', function (e) {//选中监听事件
+          console.log('selected a rectangle')
+        })
+
+        this.canvas.add(text)
+        text.enterEditing()  // 将文字置为编辑状态（可进行文字编辑）
+        // text.hiddenTextarea.focus();
       },
       loadWebImage () {  // 加载当前线上平台的图片
         fabric.Image.fromURL('/static/images/beauty.jpg', oImg => {
@@ -365,6 +394,40 @@
       },
       init () {
         this.canvas.on({
+          'mouse:down': (o) => {
+            //鼠标在画布上按下事件(起点)
+            //mouseFrom.x 和 mouseFrom.y 是在data中定义的数据 可以打印这个o看看
+            this.mouseFrom.x = o.e.offsetX   //鼠标按下的X的起点
+            this.mouseFrom.y = o.e.offsetY   //鼠标按下的y的起点
+            this.doDrawing = true            //绘制设为true
+          },
+          'mouse:up': (o) => {
+            //鼠标抬起的事件(终点)
+            //mouseTo.x 和 mouseTo.y 也是在data中定义的数据
+            this.mouseTo.x = o.e.offsetX
+            this.mouseTo.y = o.e.offsetY
+            this.drawingObject = null
+            if(this.chooseToolsName==='line'||this.chooseToolsName==='arrow'||this.chooseToolsName==='rectangle'||this.chooseToolsName==='circle'||this.chooseToolsName==='ellipse'){
+              this.drawing()
+            }
+            this.doDrawing = false    //停止绘制
+          },
+          'mouse:move': (o) => {
+            //鼠标在移动中的事件
+            this.offsetX = o.e.offsetX.toFixed(0)   //因为是小数，所以我给取整
+            this.offsetY = o.e.offsetY.toFixed(0)
+
+            if (!this.doDrawing) {
+              return
+            }
+            this.mouseTo.x = o.e.offsetX
+            this.mouseTo.y = o.e.offsetY
+            if (this.sineNum === 1) {   //这个if是我的项目里有自定义图片的功能
+              this.drawing()
+            } else if (this.sineNum === 2) {
+              this.diy()
+            }
+          },
           'object:move': (e) => {
             e.target.opacity = 0.5  //你绘画在画布上对象，移动它们的时候，让它们的透明度变成0.5
           },
@@ -379,7 +442,7 @@
           }
         })
       },
-      drawArrow (fromX, fromY, toX, toY, theta, headlen) { // 绘画箭头的函数
+      drawArrow (fromX, fromY, toX, toY, theta, headlen) {
         theta = typeof theta !== 'undefined' ? theta : 30
         headlen = typeof theta !== 'undefined' ? headlen : 10
         // 计算各角度和对应的P2,P3坐标
