@@ -105,12 +105,15 @@
             label: '橡皮'
           },
           {
+            name: 'del',
+            label: '删除'
+          },
+          {
             name: 'clear',
             label: '清空'
           }
         ],
         chooseToolsName:"",
-        drawingObject:null,
         canvas: null,
         redo:null,  // 记录动作
         doDrawing: false,
@@ -123,17 +126,38 @@
     watch: {
       thickness: {
         handler (val, oldVal) {
-          this.drawing()
+          const o = this.canvas.getActiveObject()
+          if (o) {
+            o.set('strokeWidth', val)
+            this.canvas.renderAll()
+          }
         }
       },
       color: {
         handler (val, oldVal) {
-          this.drawing()
+          const o = this.canvas.getActiveObject()
+          if (o) {
+            o.set('stroke', val)
+            this.canvas.renderAll()
+          }
         }
       },
       fontSize: {
         handler (val, oldVal) {
-          this.drawing()
+          const o = this.canvas.getActiveObject()
+          if (o) {
+            o.set('fontSize', val)
+            this.canvas.renderAll()
+          }
+        }
+      },
+      bgColor: {
+        handler (val, oldVal) {
+          const o = this.canvas.getActiveObject()
+          if (o) {
+            o.set('fill', val)
+            this.canvas.renderAll()
+          }
         }
       },
     },
@@ -167,12 +191,12 @@
           this.canvas.clear()         //清空画布
           this.canvas.renderAll()     //重新渲染
         } else if (name === 'text') {   //文字也单独处理 因为在选择到文字的时候 有一个改变文字大小的range
-          this.canvas.isDrawingMode = true
-          this.drawing()
           this.setFontSize = true      //文字大小range是否显示  是
+          this.drawing()
+
         } else {
-          this.drawing()            //调用drawing方法
           this.setFontSize = false    //否
+          this.drawing()            //调用drawing方法
         }
       },
       resetObj(){
@@ -182,9 +206,6 @@
         this.canvas.skipTargetFind = true
       },
       drawing(){
-        // if (this.drawingObject) {
-        //   this.canvas.remove(this.drawingObject)
-        // }
         let canvasObject = null
         switch (this.chooseToolsName) {
           case "pencil":
@@ -265,19 +286,22 @@
             break;
           case "text":
             this.resetObj()
-            let textbox = new fabric.Textbox('添加文字', {
+            this.canvas.isDrawingMode = true
+            let textbox = new fabric.Textbox('示例文字', {
               borderColor: '#ff0000', // 激活状态时的边框颜色
               editingBorderColor: '#ff0000', // 文本对象的边框颜色，当它处于编辑模式时
               left: 160,
               top: 160,
               width: 150,
               fontSize: this.fontSize,
-              fill: this.color,
-              hasControls: false
+              fill: this.color,   // 文字颜色
+              hasControls: true
             })
-            this.drag()
-            this.canvas.add(textbox)
+
+            this.canvas.add(textbox).setActiveObject(textbox)
             textbox.enterEditing()
+            // this.drag()
+
             break;
           case "drag":
             this.drag()
@@ -303,13 +327,16 @@
             this.canvas.freeDrawingBrush.color = '#ffffff'   //画笔颜色
             this.canvas.freeDrawingBrush.width = this.thickness  //画笔宽度
             break;
+          case "del":
+            var el = this.canvas.getActiveObject();
+            this.canvas.remove(el);
+            break;
           default:
             break;
         }
         if (canvasObject) {
           this.canvas.add(canvasObject)   //把要绘制的内容添加到画布中
           this.canvas.renderAll()
-          this.drawingObject = canvasObject
         }
       },
       drag(){
@@ -322,6 +349,7 @@
         fabric.Image.fromURL('/static/images/beauty.jpg', oImg => {
           oImg.scale(0.5)  //图片缩小
           this.canvas.add(oImg)
+          this.drag()
         })
       },
       loadLocalImageByUrl (event) {   //  文件流加载
@@ -330,6 +358,7 @@
         fabric.Image.fromURL(img, oImg => {
           oImg.scale(0.5)  //缩放
           this.canvas.add(oImg)
+          this.drag()
         })
       },
       loadLocalImageByBase64 (event) {   // base64
@@ -347,6 +376,7 @@
             height: 200
           })
           _this.canvas.add(img)
+          this.drag()
         }
       },
       toJSON () {
