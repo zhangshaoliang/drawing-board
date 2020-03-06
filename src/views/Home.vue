@@ -166,7 +166,7 @@
         this.isMobile=true
       }
       this.canvas = new fabric.Canvas('context', {
-        isDrawingMode: true,   //设置是否可以绘制
+        isDrawingMode: false,   //设置是否可以绘制
         selectable: false,     //设置是否可以选中拖动  fabric提供的
         selection: false,   // 设置这两个属性没有任何反应
         backgroundColor: '#fff'
@@ -286,7 +286,6 @@
             break;
           case "text":
             this.resetObj()
-            this.canvas.isDrawingMode = true
             let textbox = new fabric.Textbox('示例文字', {
               borderColor: '#ff0000', // 激活状态时的边框颜色
               editingBorderColor: '#ff0000', // 文本对象的边框颜色，当它处于编辑模式时
