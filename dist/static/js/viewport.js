@@ -59,9 +59,9 @@ var adaptUILayout = (function () {
 	};
 	return {regulateScreen: regulateScreen,adapt: adapt,viewport:adaptViewport};
 })();
-var isViewport=adaptUILayout.viewport(750);
+var isViewport=adaptUILayout.viewport(375);
 if(isViewport){
-    adaptUILayout.adapt(750);
-    $(window).bind('orientationchange', function (e) {adaptUILayout.adapt(750);});
+    adaptUILayout.adapt(375);
+    $(window).bind('orientationchange', function (e) {adaptUILayout.adapt(375);});
 }
 $(function(){$("body").addClass('show');try{viewport(adaptUILayout.regulateScreen.cal())}catch(e){}});
