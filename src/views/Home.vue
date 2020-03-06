@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" @keydown.space="moveCanvas=true" @keyup.space="moveCanvas=false">
     <div class="header">
       <div class="item">
         <span class="demonstration">画笔粗细</span>
@@ -23,7 +23,7 @@
         <span v-for="(item,index) in toolsArr" :key="index" @click="chooseTools(item.name,index)" ref="item">{{item.label}}</span>
       </div>
       <div class="canvasBox" ref="canvasBox">
-        <canvas id="context" width="100%" height="100%"></canvas>
+        <canvas id="context" width="100%" height="100%" ></canvas>
       </div>
     </div>
 
@@ -49,6 +49,7 @@
     data () {
       return {
         setFontSize:false,
+        moveCanvas:false,
         fontSize:40,
         thickness: 10,  // 画笔粗细
         color: '#000',  // 画笔颜色
@@ -120,7 +121,8 @@
         offsetX: 0,
         offsetY: 0,
         jsonValue: "",
-        isMobile:false
+        isMobile:false,
+        mouseDown:false
       }
     },
     watch: {
@@ -403,6 +405,21 @@
         this.saveFile(dataURL, 'test.jpg')
       },
       init () {
+        const _this=this
+        document.getElementsByTagName('body')[0].onkeydown=e=> {
+          if(e.keyCode===32){
+            this.moveCanvas=true
+            this.canvas.selectable = false
+            this.canvas.selection = false
+          }
+        }
+        document.getElementsByTagName('body')[0].onkeyup=e=>  {
+          if(e.keyCode===32){
+            this.moveCanvas=false
+            this.canvas.selectable = true
+            this.canvas.selection = true
+          }
+        }
         this.canvas.on({
           'object:move': (e) => {
             e.target.opacity = 0.5  //你绘画在画布上对象，移动它们的时候，让它们的透明度变成0.5
@@ -416,18 +433,25 @@
           'object:modified': (e) => {
             e.target.opacity = 1
           },
+          'mouse:down':(e)=>{
+            this.mouseDown = true
+          },
+          'mouse:up':(e)=>{
+            this.mouseDown = false
+          },
           'mouse:move':(e)=>{
-            if (this.moveCanvas&& e && e.e) {
+            if (this.moveCanvas&&this.mouseDown&& e && e.e) {
               var delta = new fabric.Point(e.e.movementX, e.e.movementY);
               this.canvas.relativePan(delta);
             }
           },
           'mouse:wheel':(e)=>{ // 鼠标滚动画布放大缩小
-            // var zoom = (e.deltaY > 0 ? -0.1 : 0.1) + this.canvas.getZoom();
-            // zoom = Math.max(0.1, zoom); //最小为原来的1/10
-            // zoom = Math.min(3, zoom); //最大是原来的3倍
-            // var zoomPoint = new fabric.Point(e.pageX, e.pageY);
-            // this.canvas.zoomToPoint(zoomPoint, zoom);
+            console.log(e)
+            var zoom = (e.e.deltaY > 0 ? -0.1 : 0.1) + this.canvas.getZoom();
+            zoom = Math.max(0.1, zoom); //最小为原来的1/10
+            zoom = Math.min(3, zoom); //最大是原来的3倍
+            var zoomPoint = new fabric.Point(e.e.pageX, e.e.pageY);
+            this.canvas.zoomToPoint(zoomPoint, zoom);
           }
         })
       },
