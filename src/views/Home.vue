@@ -298,9 +298,11 @@
             })
 
             this.canvas.add(textbox).setActiveObject(textbox)
-            textbox.enterEditing()
-            // this.drag()
-
+            // textbox.enterEditing()   // 添加当时不做编辑 随后双击编辑
+            this.drag()
+            textbox.on('selected',()=>{
+              this.setFontSize = true
+            })
             break;
           case "drag":
             this.drag()
