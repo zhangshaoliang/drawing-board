@@ -40,6 +40,7 @@
     <div class="showJson" v-if="!isMobile">
       <textarea v-model="jsonValue" style="height: 121px;resize: none;width: 100%;box-sizing: border-box;"></textarea>
     </div>
+    <div v-if="isMobile" style="position: fixed;z-index: 10000;left: 0;top: 0;width: 100%;height: 100%;background-color: #fff;text-align: center;line-height: 100px;">对手机端支持暂时关闭 谢谢！</div>
   </div>
 </template>
 
