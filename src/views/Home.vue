@@ -1,5 +1,5 @@
 <template>
-  <div class="container" @keydown.space="moveCanvas=true" @keyup.space="moveCanvas=false">
+  <div class="container">
     <div class="header">
       <div class="item">
         <span class="demonstration">画笔粗细</span>
@@ -23,7 +23,7 @@
         <span v-for="(item,index) in toolsArr" :key="index" @click="chooseTools(item.name,index)" ref="item">{{item.label}}</span>
       </div>
       <div class="canvasBox" ref="canvasBox">
-        <canvas id="context" width="100%" height="100%" ></canvas>
+        <canvas id="context"></canvas>
       </div>
     </div>
 
@@ -122,7 +122,8 @@
         offsetY: 0,
         jsonValue: "",
         isMobile:false,
-        mouseDown:false
+        canvasStartX:0,
+        canvasStartY:0,
       }
     },
     watch: {
@@ -171,13 +172,12 @@
         isDrawingMode: false,   //设置是否可以绘制
         selectable: false,     //设置是否可以选中拖动  fabric提供的
         selection: false,   // 设置这两个属性没有任何反应
-        backgroundColor: '#fff'
+        backgroundColor: '#F1F3F7'
       })
       this.$nextTick(()=>{
         this.canvas.setWidth(this.$refs.canvasBox.offsetWidth)     //设置画布的宽度
         this.canvas.setHeight(this.$refs.canvasBox.offsetHeight)   //设置画布的高度
       })
-
       this.init()
     },
     methods: {
@@ -226,7 +226,7 @@
             break;
           case "arrow":
             this.resetObj()
-            canvasObject = new fabric.Path(this.drawArrow(100, 100, 200, 200, 17.5, 17.5), {
+            canvasObject = new fabric.Path(this.drawArrow(this.canvasStartX+100,this.canvasStartY+100, 200, 200, 17.5, 17.5), {
               stroke: this.color,
               fill: this.bgColor,
               strokeWidth: this.thickness
@@ -236,8 +236,8 @@
           case "rectangle":
             this.resetObj()
             canvasObject = new fabric.Rect({
-              left: 100,
-              top: 100,
+              left: this.canvasStartX,
+              top: this.canvasStartY,
               width: 100,
               height: 100,
               stroke: this.color,
@@ -249,8 +249,8 @@
           case "circle":
             this.resetObj()
             canvasObject = new fabric.Circle({
-              left: 150,
-              top: 150,
+              left: this.canvasStartX+20,
+              top: this.canvasStartY+30,
               radius: 80,   //圆的半径
               stroke: this.color,
               strokeWidth: this.thickness,
@@ -261,8 +261,8 @@
           case "ellipse":
             this.resetObj()
             canvasObject = new fabric.Ellipse({
-              left: 150,
-              top: 150,
+              left: this.canvasStartX+40,
+              top: this.canvasStartY+50,
               fill: this.bgColor,
               originX: 'center',    //从X轴中心点绘制
               originY: 'center',    //从Y轴中心点绘制
@@ -276,8 +276,8 @@
           case "equilateral":
             this.resetObj()
             canvasObject = new fabric.Triangle({
-              top: 130,
-              left: 130,
+              left: this.canvasStartX,
+              top: this.canvasStartY,
               width: 120,
               height: Math.sqrt(3)*60,
               stroke: this.color,
@@ -291,8 +291,8 @@
             let textbox = new fabric.Textbox('示例文字', {
               borderColor: '#ff0000', // 激活状态时的边框颜色
               editingBorderColor: '#ff0000', // 文本对象的边框颜色，当它处于编辑模式时
-              left: 160,
-              top: 160,
+              left: this.canvasStartX+100,
+              top: this.canvasStartY+100,
               width: 150,
               fontSize: this.fontSize,
               fill: this.color,   // 文字颜色
@@ -373,8 +373,8 @@
           var img = document.createElement("img")
           img.src = imgData
           var img = new fabric.Image(img, {
-            left: 100,
-            top: 100,
+            left: this.canvasStartX+100,
+            top: this.canvasStartY+100,
             width: 200,
             height: 200
           })
@@ -405,21 +405,21 @@
         this.saveFile(dataURL, 'test.jpg')
       },
       init () {
-        const _this=this
-        document.getElementsByTagName('body')[0].onkeydown=e=> {
-          if(e.keyCode===32){
-            this.moveCanvas=true
-            this.canvas.selectable = false
-            this.canvas.selection = false
-          }
-        }
-        document.getElementsByTagName('body')[0].onkeyup=e=>  {
-          if(e.keyCode===32){
-            this.moveCanvas=false
-            this.canvas.selectable = true
-            this.canvas.selection = true
-          }
-        }
+        // 添加设计稿大小
+       var canvasObject = new fabric.Rect({
+          left: (this.$refs.canvasBox.offsetWidth-375)/2,
+          top:  (this.$refs.canvasBox.offsetHeight-667)/2,
+          width: 375,
+          height: 667,
+          fill: '#fff'
+        })
+
+        this.canvas.add(canvasObject)   //把要绘制的内容添加到画布中
+        this.canvas.renderAll()
+        canvasObject.set('selectable',false)
+        console.log()
+        this.canvasStartX=canvasObject.get('left')
+        this.canvasStartY=canvasObject.get('top')
         this.canvas.on({
           'object:move': (e) => {
             e.target.opacity = 0.5  //你绘画在画布上对象，移动它们的时候，让它们的透明度变成0.5
@@ -434,13 +434,19 @@
             e.target.opacity = 1
           },
           'mouse:down':(e)=>{
-            this.mouseDown = true
+            if(e.e.altKey) {
+              this.moveCanvas = true
+              this.canvas.selectable = false
+              this.canvas.selection = false
+            }
           },
           'mouse:up':(e)=>{
-            this.mouseDown = false
+            this.moveCanvas = false
+            this.canvas.selectable = true
+            this.canvas.selection = true
           },
           'mouse:move':(e)=>{
-            if (this.moveCanvas&&this.mouseDown&& e && e.e) {
+            if (this.moveCanvas&& e && e.e) {
               var delta = new fabric.Point(e.e.movementX, e.e.movementY);
               this.canvas.relativePan(delta);
             }
@@ -454,6 +460,7 @@
             this.canvas.zoomToPoint(zoomPoint, zoom);
           }
         })
+
       },
       drawArrow (fromX, fromY, toX, toY, theta, headlen) { // 绘画箭头的函数
         theta = typeof theta !== 'undefined' ? theta : 30
@@ -486,11 +493,6 @@
   .marginLeft20 {
     margin-left: 20px
   }
-
-  #context {
-    border: 1px solid;
-  }
-
   .buttonGroup {
     margin-top: 20px;
 
@@ -540,10 +542,11 @@
         }
 
         .canvasBox {
+          border: 1px solid;
           flex: 1;
           margin-right: 10px;
           height: 700px;
-          background-color: #fff;
+          background-color: #F1F3F7;
         }
       }
     }
